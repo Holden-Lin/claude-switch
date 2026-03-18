@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import type { ProfileType } from "../types";
 
 export const icons = {
   active: chalk.green("▸"),
@@ -25,10 +26,6 @@ export function info(text: string): void {
   console.log(`  ${icons.info} ${text}`);
 }
 
-export function dim(text: string): string {
-  return chalk.dim(text);
-}
-
 export function hint(text: string): void {
   console.log(chalk.dim(`  ${text}`));
 }
@@ -37,8 +34,14 @@ export function blank(): void {
   console.log();
 }
 
-export function formatSubscription(sub: string | null): string {
-  if (!sub) return chalk.dim("unknown");
+export function formatType(type: ProfileType): string {
+  return type === "oauth" ? chalk.blue("oauth") : chalk.yellow("api-key");
+}
+
+export function formatLabel(label: string | null, type: ProfileType): string {
+  if (!label) return chalk.dim("unknown");
+  if (type === "api-key") return chalk.dim(label);
+
   const map: Record<string, string> = {
     max: chalk.magenta("Max"),
     pro: chalk.cyan("Pro"),
@@ -46,5 +49,10 @@ export function formatSubscription(sub: string | null): string {
     team: chalk.blue("Team"),
     enterprise: chalk.yellow("Enterprise"),
   };
-  return map[sub.toLowerCase()] ?? chalk.dim(sub);
+  return map[label.toLowerCase()] ?? chalk.dim(label);
+}
+
+export function maskKey(key: string): string {
+  if (key.length <= 12) return "••••";
+  return key.slice(0, 7) + "••••" + key.slice(-4);
 }

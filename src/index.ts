@@ -3,7 +3,7 @@
 import chalk from "chalk";
 import { select } from "@inquirer/prompts";
 import { listProfiles, readState } from "./lib/profiles";
-import { formatSubscription, blank, hint } from "./lib/ui";
+import { formatLabel, formatType, blank, hint } from "./lib/ui";
 import { add } from "./commands/add";
 import { use } from "./commands/use";
 import { list } from "./commands/list";
@@ -21,6 +21,11 @@ const HELP = `
     claude-switch remove <name>    Remove a profile
     claude-switch current          Show active profile
     claude-switch help             Show this help
+
+  ${chalk.dim("Shortcuts:")}
+    claude-switch <name>           Same as 'use <name>'
+    claude-switch ls               Same as 'list'
+    claude-switch rm <name>        Same as 'remove <name>'
 `;
 
 async function interactivePicker(): Promise<void> {
@@ -41,7 +46,14 @@ async function interactivePicker(): Promise<void> {
   const choice = await select({
     message: "Switch to profile",
     choices: profiles.map((p) => ({
-      name: `${p.name}  ${formatSubscription(p.subscriptionType)}${p.isActive ? chalk.dim("  (active)") : ""}`,
+      name: [
+        p.name,
+        formatType(p.type),
+        formatLabel(p.label, p.type),
+        p.isActive ? chalk.dim("(active)") : "",
+      ]
+        .filter(Boolean)
+        .join("  "),
       value: p.name,
     })),
     default: state.active ?? undefined,
@@ -57,7 +69,7 @@ async function main(): Promise<void> {
     switch (command) {
       case "add":
         if (!args[0]) {
-          console.error(chalk.red("\n  Missing profile name. Usage: claude-switch add <name>\n"));
+          console.error(chalk.red("\n  Usage: claude-switch add <name>\n"));
           process.exit(1);
         }
         await add(args[0]);
@@ -65,7 +77,7 @@ async function main(): Promise<void> {
 
       case "use":
         if (!args[0]) {
-          console.error(chalk.red("\n  Missing profile name. Usage: claude-switch use <name>\n"));
+          console.error(chalk.red("\n  Usage: claude-switch use <name>\n"));
           process.exit(1);
         }
         await use(args[0]);
@@ -79,7 +91,7 @@ async function main(): Promise<void> {
       case "remove":
       case "rm":
         if (!args[0]) {
-          console.error(chalk.red("\n  Missing profile name. Usage: claude-switch remove <name>\n"));
+          console.error(chalk.red("\n  Usage: claude-switch remove <name>\n"));
           process.exit(1);
         }
         await remove(args[0]);
@@ -99,8 +111,7 @@ async function main(): Promise<void> {
         await interactivePicker();
         break;
 
-      default:
-        // Treat unknown command as a profile name shortcut: `claude-switch work`
+      default: {
         const profiles = await listProfiles();
         const match = profiles.find((p) => p.name === command);
         if (match) {
@@ -110,6 +121,7 @@ async function main(): Promise<void> {
           console.log(HELP);
           process.exit(1);
         }
+      }
     }
   } catch (err) {
     if (err instanceof Error && err.message.includes("User force closed")) {

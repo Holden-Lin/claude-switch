@@ -1,15 +1,15 @@
 import chalk from "chalk";
-import { confirm } from "@inquirer/prompts";
-import { profileExists, addProfile } from "../lib/profiles";
+import { select, confirm, password } from "@inquirer/prompts";
+import { profileExists, addOAuthProfile, addApiKeyProfile } from "../lib/profiles";
 import { readCredentials } from "../lib/credentials";
 import { CREDENTIALS_FILE } from "../lib/paths";
-import { success, error, info, blank, formatSubscription } from "../lib/ui";
+import { success, error, info, blank, formatLabel, maskKey } from "../lib/ui";
 
 export async function add(name: string): Promise<void> {
   blank();
 
-  if (!name || /[/\\:*?"<>|]/.test(name)) {
-    error("Invalid profile name. Use alphanumeric characters, hyphens, or underscores.");
+  if (!name || /[/\\:*?"<>|.\s]/.test(name)) {
+    error("Invalid profile name. Use letters, numbers, hyphens, or underscores.");
     blank();
     process.exit(1);
   }
@@ -20,21 +20,51 @@ export async function add(name: string): Promise<void> {
     process.exit(1);
   }
 
+  const type = await select({
+    message: "What type of profile?",
+    choices: [
+      { name: "OAuth — Use a Claude subscription (Pro, Max, Team, etc.)", value: "oauth" as const },
+      { name: "API Key — Use an Anthropic API key", value: "api-key" as const },
+    ],
+  });
+
+  if (type === "api-key") {
+    await addApiKey(name);
+  } else {
+    await addOAuth(name);
+  }
+}
+
+async function addApiKey(name: string): Promise<void> {
+  const key = await password({
+    message: "Paste your API key",
+    mask: "*",
+    validate: (v) => {
+      if (!v.trim()) return "API key cannot be empty";
+      return true;
+    },
+  });
+
+  await addApiKeyProfile(name, key.trim());
+  blank();
+  success(`Profile ${chalk.bold(name)} created  ${chalk.dim(maskKey(key.trim()))}`);
+  blank();
+}
+
+async function addOAuth(name: string): Promise<void> {
   const creds = await readCredentials(CREDENTIALS_FILE);
 
   if (creds) {
-    const sub = creds.claudeAiOauth?.subscriptionType;
-    info(
-      `Found active session ${sub ? `(${formatSubscription(sub)})` : ""}`,
-    );
+    const sub = creds.claudeAiOauth?.subscriptionType ?? null;
+    info(`Found active session ${sub ? `(${formatLabel(sub, "oauth")})` : ""}`);
 
     const importCurrent = await confirm({
-      message: "Import this session as the new profile?",
+      message: "Save this session as the new profile?",
       default: true,
     });
 
     if (importCurrent) {
-      await addProfile(name, CREDENTIALS_FILE);
+      await addOAuthProfile(name, CREDENTIALS_FILE);
       blank();
       success(`Profile ${chalk.bold(name)} created from current session`);
       blank();
@@ -42,7 +72,6 @@ export async function add(name: string): Promise<void> {
     }
   }
 
-  // No credentials or user declined — run claude login
   info("Opening Claude login...");
   blank();
 
@@ -56,12 +85,12 @@ export async function add(name: string): Promise<void> {
   const newCreds = await readCredentials(CREDENTIALS_FILE);
   if (!newCreds) {
     blank();
-    error("Login failed or was cancelled. No credentials found.");
+    error("Login failed or was cancelled.");
     blank();
     process.exit(1);
   }
 
-  await addProfile(name, CREDENTIALS_FILE);
+  await addOAuthProfile(name, CREDENTIALS_FILE);
   blank();
   success(`Profile ${chalk.bold(name)} created`);
   blank();

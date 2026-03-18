@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { listProfiles } from "../lib/profiles";
-import { header, hint, blank, icons, formatSubscription } from "../lib/ui";
+import { header, hint, blank, icons, formatLabel, formatType } from "../lib/ui";
 
 export async function list(): Promise<void> {
   const profiles = await listProfiles();
@@ -20,8 +20,9 @@ export async function list(): Promise<void> {
   for (const p of profiles) {
     const icon = p.isActive ? icons.active : icons.inactive;
     const name = p.isActive ? chalk.green.bold(p.name) : p.name;
-    const sub = formatSubscription(p.subscriptionType);
-    console.log(`  ${icon} ${name}  ${sub}`);
+    const type = formatType(p.type);
+    const label = formatLabel(p.label, p.type);
+    console.log(`  ${icon} ${name}  ${type}  ${label}`);
   }
 
   blank();
