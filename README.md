@@ -6,14 +6,6 @@ This tool lets you save multiple Claude accounts as profiles and switch between 
 
 ## Install
 
-You'll need [Bun](https://bun.sh) installed.
-
-```bash
-bun add -g @hoangvu12/claude-switch
-```
-
-Or with npm (still needs Bun as runtime):
-
 ```bash
 npm install -g @hoangvu12/claude-switch
 ```
