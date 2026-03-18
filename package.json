@@ -1,0 +1,17 @@
+{
+  "name": "@hoangvu12/claude-switch",
+  "version": "1.0.0",
+  "description": "Switch between Claude Code accounts with ease",
+  "type": "module",
+  "bin": {
+    "claude-switch": "./src/index.ts"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "@inquirer/prompts": "^7.5.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.0",
+    "typescript": "^5.7.0"
+  }
+}
