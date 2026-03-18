@@ -1,6 +1,6 @@
 {
   "name": "@hoangvu12/claude-switch",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Switch between Claude Code accounts with ease",
   "type": "module",
   "bin": {
@@ -10,7 +10,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "bun build ./src/index.ts --target bun --outfile ./dist/claude-switch.js",
+    "build": "bun build ./src/index.ts --target node --outfile ./dist/claude-switch.js",
     "prepublishOnly": "bun run build"
   },
   "repository": {

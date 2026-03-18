@@ -1,19 +1,14 @@
 import { SETTINGS_FILE } from "./paths";
+import { readJson, writeJson } from "./fs";
 
 type Settings = Record<string, unknown>;
 
 async function read(): Promise<Settings> {
-  const file = Bun.file(SETTINGS_FILE);
-  if (!(await file.exists())) return {};
-  try {
-    return (await file.json()) as Settings;
-  } catch {
-    return {};
-  }
+  return readJson<Settings>(SETTINGS_FILE, {});
 }
 
 async function write(settings: Settings): Promise<void> {
-  await Bun.write(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+  await writeJson(SETTINGS_FILE, settings);
 }
 
 export async function setApiKey(key: string): Promise<void> {

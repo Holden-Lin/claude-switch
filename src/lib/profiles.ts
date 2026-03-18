@@ -8,6 +8,7 @@ import {
   profileDataFile,
 } from "./paths";
 import { readCredentials, copyCredentials } from "./credentials";
+import { fileExists, readJson, writeJson } from "./fs";
 import { setApiKey, clearApiKey } from "./settings";
 import { maskKey } from "./ui";
 import type { ProfileState, ProfileInfo, ProfileData } from "../types";
@@ -19,34 +20,22 @@ async function ensureDir(path: string): Promise<void> {
 // -- State --
 
 export async function readState(): Promise<ProfileState> {
-  const file = Bun.file(STATE_FILE);
-  if (!(await file.exists())) return { active: null };
-  try {
-    return (await file.json()) as ProfileState;
-  } catch {
-    return { active: null };
-  }
+  return readJson<ProfileState>(STATE_FILE, { active: null });
 }
 
 async function writeState(state: ProfileState): Promise<void> {
   await ensureDir(PROFILES_DIR);
-  await Bun.write(STATE_FILE, JSON.stringify(state, null, 2));
+  await writeJson(STATE_FILE, state);
 }
 
 // -- Profile data --
 
 async function readProfileData(name: string): Promise<ProfileData> {
-  const file = Bun.file(profileDataFile(name));
-  if (!(await file.exists())) return { type: "oauth" };
-  try {
-    return (await file.json()) as ProfileData;
-  } catch {
-    return { type: "oauth" };
-  }
+  return readJson<ProfileData>(profileDataFile(name), { type: "oauth" });
 }
 
 async function writeProfileData(name: string, data: ProfileData): Promise<void> {
-  await Bun.write(profileDataFile(name), JSON.stringify(data, null, 2));
+  await writeJson(profileDataFile(name), data);
 }
 
 // -- Public API --
@@ -82,8 +71,7 @@ export async function listProfiles(): Promise<ProfileInfo[]> {
 }
 
 export async function profileExists(name: string): Promise<boolean> {
-  const file = Bun.file(profileDataFile(name));
-  return file.exists();
+  return fileExists(profileDataFile(name));
 }
 
 export async function getProfileData(name: string): Promise<ProfileData> {
@@ -110,7 +98,7 @@ export async function addApiKeyProfile(
   await setApiKey(apiKey);
 }
 
-export async function switchProfile(name: string): Promise<void> {
+export async function switchProfile(name: string): Promise<ProfileData> {
   if (!(await profileExists(name))) {
     throw new Error(`Profile "${name}" does not exist`);
   }
@@ -139,6 +127,8 @@ export async function switchProfile(name: string): Promise<void> {
   }
 
   await writeState({ active: name });
+
+  return targetData;
 }
 
 export async function removeProfile(name: string): Promise<void> {

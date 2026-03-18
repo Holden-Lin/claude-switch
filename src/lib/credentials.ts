@@ -1,19 +1,20 @@
 import { platform } from "os";
+import { spawnSync } from "child_process";
 import { CREDENTIALS_FILE } from "./paths";
+import { fileExists, readJson, writeJson } from "./fs";
 import type { CredentialsFile } from "../types";
 
 const IS_MACOS = platform() === "darwin";
 const KEYCHAIN_SERVICE = "Claude Code-credentials";
 
 function getKeychainAccount(): string {
-  return process.env.USER ?? Bun.spawnSync(["whoami"]).stdout.toString().trim();
+  return process.env.USER ?? spawnSync("whoami").stdout.toString().trim();
 }
 
 // -- macOS Keychain helpers --
 
 async function readKeychain(): Promise<CredentialsFile | null> {
-  const result = Bun.spawnSync([
-    "security",
+  const result = spawnSync("security", [
     "find-generic-password",
     "-s",
     KEYCHAIN_SERVICE,
@@ -22,7 +23,7 @@ async function readKeychain(): Promise<CredentialsFile | null> {
     "-w",
   ]);
 
-  if (result.exitCode !== 0) return null;
+  if (result.status !== 0) return null;
 
   try {
     const hex = result.stdout.toString().trim();
@@ -39,8 +40,7 @@ async function writeKeychain(creds: CredentialsFile): Promise<void> {
   const account = getKeychainAccount();
 
   // Delete existing entry first (ignore errors if it doesn't exist)
-  Bun.spawnSync([
-    "security",
+  spawnSync("security", [
     "delete-generic-password",
     "-s",
     KEYCHAIN_SERVICE,
@@ -48,8 +48,7 @@ async function writeKeychain(creds: CredentialsFile): Promise<void> {
     account,
   ]);
 
-  const result = Bun.spawnSync([
-    "security",
+  const result = spawnSync("security", [
     "add-generic-password",
     "-s",
     KEYCHAIN_SERVICE,
@@ -59,30 +58,24 @@ async function writeKeychain(creds: CredentialsFile): Promise<void> {
     hex,
   ]);
 
-  if (result.exitCode !== 0) {
+  if (result.status !== 0) {
     throw new Error("Failed to write to macOS Keychain");
   }
 }
 
 // -- File-based helpers (Linux/Windows) --
 
-async function readFile(
+async function readJsonFile(
   path: string,
 ): Promise<CredentialsFile | null> {
-  const file = Bun.file(path);
-  if (!(await file.exists())) return null;
-  try {
-    return (await file.json()) as CredentialsFile;
-  } catch {
-    return null;
-  }
+  return readJson<CredentialsFile | null>(path, null);
 }
 
-async function writeFile(
+async function writeJsonFile(
   creds: CredentialsFile,
   path: string,
 ): Promise<void> {
-  await Bun.write(path, JSON.stringify(creds, null, 2));
+  await writeJson(path, creds);
 }
 
 // -- Public API --
@@ -98,7 +91,7 @@ export async function readCredentials(
   if (IS_MACOS && path === CREDENTIALS_FILE) {
     return readKeychain();
   }
-  return readFile(path);
+  return readJsonFile(path);
 }
 
 export async function writeCredentials(
@@ -108,7 +101,7 @@ export async function writeCredentials(
   if (IS_MACOS && path === CREDENTIALS_FILE) {
     return writeKeychain(creds);
   }
-  await writeFile(creds, path);
+  await writeJsonFile(creds, path);
 }
 
 export async function copyCredentials(

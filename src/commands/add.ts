@@ -1,3 +1,4 @@
+import { spawn } from "child_process";
 import chalk from "chalk";
 import { select, confirm, password } from "@inquirer/prompts";
 import { profileExists, addOAuthProfile, addApiKeyProfile } from "../lib/profiles";
@@ -75,12 +76,11 @@ async function addOAuth(name: string): Promise<void> {
   info("Opening Claude login...");
   blank();
 
-  const proc = Bun.spawn(["claude", "login"], {
-    stdin: "inherit",
-    stdout: "inherit",
-    stderr: "inherit",
+  const proc = spawn("claude", ["login"], {
+    stdio: "inherit",
+    shell: true,
   });
-  await proc.exited;
+  await new Promise<void>((resolve) => proc.on("close", resolve));
 
   const newCreds = await readCredentials(CREDENTIALS_FILE);
   if (!newCreds) {

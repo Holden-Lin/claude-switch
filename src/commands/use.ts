@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { switchProfile, profileExists, readState, getProfileData } from "../lib/profiles";
+import { switchProfile, profileExists, readState } from "../lib/profiles";
 import { readCredentials } from "../lib/credentials";
 import { profileCredentials } from "../lib/paths";
 import { success, error, blank, formatLabel, formatType, maskKey } from "../lib/ui";
@@ -21,9 +21,7 @@ export async function use(name: string): Promise<void> {
     return;
   }
 
-  await switchProfile(name);
-
-  const data = await getProfileData(name);
+  const data = await switchProfile(name);
   let label: string;
 
   if (data.type === "api-key" && data.apiKey) {
