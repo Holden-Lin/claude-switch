@@ -10,6 +10,13 @@ This tool lets you save multiple Claude accounts as profiles and switch between 
 npm install -g @hoangvu12/claude-switch
 ```
 
+Or use it directly with `npx`:
+
+```bash
+npx @hoangvu12/claude-switch add personal
+npx @hoangvu12/claude-switch use work
+```
+
 ## Getting Started
 
 ```bash
@@ -17,7 +24,8 @@ npm install -g @hoangvu12/claude-switch
 claude-switch add personal
 
 # Log into another account, save that too
-claude login
+claude auth logout
+claude auth login
 claude-switch add work
 
 # Now switch whenever you want
@@ -65,7 +73,7 @@ When you switch to an API key profile, the key gets written to your Claude setti
 
 Profiles live in `~/.claude-profiles/`. Each one stores either OAuth credentials or an API key.
 
-**OAuth profiles** (subscriptions) swap `~/.claude/.credentials.json` — the file Claude Code reads for auth. On macOS, it reads/writes the Keychain instead.
+**OAuth profiles** (subscriptions) swap `~/.claude/.credentials.json` and the `oauthAccount` field in `~/.claude.json` — the files Claude Code reads for auth and account identity. On macOS, credentials are read/written via the Keychain instead.
 
 **API key profiles** write `ANTHROPIC_API_KEY` into the `env` block of `~/.claude/settings.json`. This works everywhere — terminal, VS Code, Cursor, any IDE that runs Claude Code.
 

@@ -6,12 +6,14 @@ import {
   profileDir,
   profileCredentials,
   profileDataFile,
+  profileAccountFile,
 } from "./paths";
 import { readCredentials, copyCredentials } from "./credentials";
+import { readOAuthAccount, writeOAuthAccount } from "./account";
 import { fileExists, readJson, writeJson } from "./fs";
 import { setApiKey, clearApiKey } from "./settings";
 import { maskKey } from "./ui";
-import type { ProfileState, ProfileInfo, ProfileData } from "../types";
+import type { ProfileState, ProfileInfo, ProfileData, OAuthAccount } from "../types";
 
 async function ensureDir(path: string): Promise<void> {
   await mkdir(path, { recursive: true });
@@ -85,6 +87,13 @@ export async function addOAuthProfile(
   await ensureDir(profileDir(name));
   await copyCredentials(fromCredentials, profileCredentials(name));
   await writeProfileData(name, { type: "oauth" });
+
+  // Save oauthAccount from ~/.claude.json
+  const account = await readOAuthAccount();
+  if (account) {
+    await writeJson(profileAccountFile(name), account);
+  }
+
   await writeState({ active: name });
 }
 
@@ -106,7 +115,7 @@ export async function switchProfile(name: string): Promise<ProfileData> {
   const state = await readState();
   const targetData = await readProfileData(name);
 
-  // Save current credentials back to the old profile (if it was oauth)
+  // Save current credentials and account back to the old profile (if it was oauth)
   if (state.active && state.active !== name) {
     const oldData = await readProfileData(state.active);
     if (oldData.type === "oauth") {
@@ -114,6 +123,10 @@ export async function switchProfile(name: string): Promise<ProfileData> {
       if (currentCreds) {
         await ensureDir(profileDir(state.active));
         await copyCredentials(CREDENTIALS_FILE, profileCredentials(state.active));
+      }
+      const currentAccount = await readOAuthAccount();
+      if (currentAccount) {
+        await writeJson(profileAccountFile(state.active), currentAccount);
       }
     }
   }
@@ -124,6 +137,15 @@ export async function switchProfile(name: string): Promise<ProfileData> {
   } else {
     await clearApiKey();
     await copyCredentials(profileCredentials(name), CREDENTIALS_FILE);
+
+    // Restore oauthAccount to ~/.claude.json
+    const savedAccount = await readJson<OAuthAccount | null>(
+      profileAccountFile(name),
+      null,
+    );
+    if (savedAccount) {
+      await writeOAuthAccount(savedAccount);
+    }
   }
 
   await writeState({ active: name });

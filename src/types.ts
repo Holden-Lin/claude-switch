@@ -11,6 +11,21 @@ export interface CredentialsFile {
   claudeAiOauth: OAuthCredentials;
 }
 
+export interface OAuthAccount {
+  accountUuid?: string;
+  emailAddress?: string;
+  organizationUuid?: string;
+  displayName?: string;
+  organizationRole?: string;
+  organizationName?: string;
+  workspaceRole?: string | null;
+  billingType?: string;
+  hasExtraUsageEnabled?: boolean;
+  accountCreatedAt?: string;
+  subscriptionCreatedAt?: string;
+  [key: string]: unknown;
+}
+
 export type ProfileType = "oauth" | "api-key";
 
 export interface ProfileData {
