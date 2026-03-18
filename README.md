@@ -6,8 +6,10 @@ Save multiple profiles (personal, work, etc.) and swap between them instantly.
 
 ## Install
 
+Requires [Bun](https://bun.sh) runtime.
+
 ```bash
-bun install -g @hoangvu12/claude-switch
+bun add -g @hoangvu12/claude-switch
 ```
 
 ## Quick Start

@@ -1,11 +1,23 @@
 {
   "name": "@hoangvu12/claude-switch",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Switch between Claude Code accounts with ease",
   "type": "module",
   "bin": {
     "claude-switch": "./bin/claude-switch.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hoangvu12/claude-switch"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "account-switcher",
+    "cli",
+    "bun"
+  ],
+  "license": "MIT",
   "dependencies": {
     "chalk": "^5.4.1",
     "@inquirer/prompts": "^7.5.0"
