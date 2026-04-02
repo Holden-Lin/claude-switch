@@ -1,1 +1,0 @@
- 本项目为开源项目，不需要维护docs/req_changelog.md。把实际改动changelog写在readme最后

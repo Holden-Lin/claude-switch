@@ -135,3 +135,4 @@ MIT
 - 改为兼容当前 Claude Code 的 Keychain JSON 凭证格式
 - 保留对旧 hex 编码 Keychain 数据的兼容读取能力
 - 保存和切换 profile 时保留额外认证字段，例如 `mcpOAuth`
+- 删除仓库根目录下不再需要的 `AGENTS.md`
