@@ -9,6 +9,8 @@ export interface OAuthCredentials {
 
 export interface CredentialsFile {
   claudeAiOauth: OAuthCredentials;
+  mcpOAuth?: unknown;
+  [key: string]: unknown;
 }
 
 export interface OAuthAccount {

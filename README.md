@@ -73,7 +73,7 @@ When you switch to an API key profile, the key gets written to your Claude setti
 
 Profiles live in `~/.claude-profiles/`. Each one stores either OAuth credentials or an API key.
 
-**OAuth profiles** (subscriptions) swap `~/.claude/.credentials.json` and the `oauthAccount` field in `~/.claude.json` — the files Claude Code reads for auth and account identity. On macOS, credentials are read/written via the Keychain instead.
+**OAuth profiles** (subscriptions) swap `~/.claude/.credentials.json` and the `oauthAccount` field in `~/.claude.json` — the files Claude Code reads for auth and account identity. On macOS, credentials are read/written via the Keychain instead. Current Claude Code JSON payloads and older hex-encoded claude-switch payloads are both supported.
 
 **API key profiles** write `ANTHROPIC_API_KEY` into the `env` block of `~/.claude/settings.json`. This works everywhere — terminal, VS Code, Cursor, any IDE that runs Claude Code.
 

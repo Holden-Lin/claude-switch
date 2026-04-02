@@ -1,17 +1,40 @@
 import { platform } from "os";
 import { spawnSync } from "child_process";
 import { CREDENTIALS_FILE } from "./paths";
-import { fileExists, readJson, writeJson } from "./fs";
+import { readJson, writeJson } from "./fs";
 import type { CredentialsFile } from "../types";
 
 const IS_MACOS = platform() === "darwin";
 const KEYCHAIN_SERVICE = "Claude Code-credentials";
+const HEX_PATTERN = /^[0-9a-f]+$/i;
 
 function getKeychainAccount(): string {
   return process.env.USER ?? spawnSync("whoami").stdout.toString().trim();
 }
 
 // -- macOS Keychain helpers --
+
+function parseKeychainCredentials(raw: string): CredentialsFile | null {
+  const payload = raw.trim();
+  if (!payload) return null;
+
+  try {
+    return JSON.parse(payload) as CredentialsFile;
+  } catch {
+    // Fall back to the legacy hex-encoded payload used by older releases.
+  }
+
+  if (!HEX_PATTERN.test(payload) || payload.length % 2 !== 0) {
+    return null;
+  }
+
+  try {
+    const json = Buffer.from(payload, "hex").toString("utf-8");
+    return JSON.parse(json) as CredentialsFile;
+  } catch {
+    return null;
+  }
+}
 
 async function readKeychain(): Promise<CredentialsFile | null> {
   const result = spawnSync("security", [
@@ -25,37 +48,22 @@ async function readKeychain(): Promise<CredentialsFile | null> {
 
   if (result.status !== 0) return null;
 
-  try {
-    const hex = result.stdout.toString().trim();
-    const json = Buffer.from(hex, "hex").toString("utf-8");
-    return JSON.parse(json) as CredentialsFile;
-  } catch {
-    return null;
-  }
+  return parseKeychainCredentials(result.stdout.toString("utf-8"));
 }
 
 async function writeKeychain(creds: CredentialsFile): Promise<void> {
-  const json = JSON.stringify(creds);
-  const hex = Buffer.from(json, "utf-8").toString("hex");
+  const payload = JSON.stringify(creds);
   const account = getKeychainAccount();
-
-  // Delete existing entry first (ignore errors if it doesn't exist)
-  spawnSync("security", [
-    "delete-generic-password",
-    "-s",
-    KEYCHAIN_SERVICE,
-    "-a",
-    account,
-  ]);
 
   const result = spawnSync("security", [
     "add-generic-password",
+    "-U",
     "-s",
     KEYCHAIN_SERVICE,
     "-a",
     account,
     "-w",
-    hex,
+    payload,
   ]);
 
   if (result.status !== 0) {
