@@ -1,5 +1,7 @@
 # claude-switch
 
+**语言 / Languages / 言語:** [中文](./README.md) | [English](./README.en.md) | [日本語](./README.ja.md)
+
 一个用于快速切换 Claude Code 账号的 CLI。支持订阅账号和 API Key 配置，适合在个人账号、团队账号、测试账号之间频繁切换。
 
 这个仓库是基于上游项目的兼容性修复版，重点解决当前 macOS + Claude Code 新版本下的登录与凭证读取问题。
